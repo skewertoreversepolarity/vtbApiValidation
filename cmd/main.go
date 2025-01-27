@@ -1,23 +1,34 @@
 package main
 
-import "vtbapivalidation/internal/models"
+import (
+	"github.com/gin-gonic/gin"
+	"log/slog"
+	"os"
+	"vtbapivalidation/handlers"
+	"vtbapivalidation/internal"
+)
 
 func main() {
-	orderRegistration := models.Requset{
-		Method:   "POST",
-		Endpoint: "https://vtb.rbsuat.com/payment/rest/register.do",
-		Headers: map[string]string{
-			"Content-Type": "application/x-www-form-urlencoded",
-		},
-		Body: map[string]string{
-			"amount":       "100",
-			"currency":     "643",
-			"language":     "en",
-			"returnUrl":    "https://mybestmerchantreturnurl.com",
-			"userName":     "Test-Api-order",
-			"userPassword": "cnngn-D0",
-			"clientId":     "259753456",
-		},
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	db, err := internal.GormConnect()
+	if err != nil {
+		logger.Error("cannot connect to database", "err", err.Error())
+		return
 	}
 
+	h := handlers.NewHandlers(db, logger)
+
+	router := gin.New()
+
+	// Группа маршрутов для API VTB
+	vtbPaymentHandlers := router.Group("/vtb.rbsuat.com/payment")
+	{
+		vtbPaymentHandlers.POST("/rest/register.do", h.RegistrOrderHandler) // Обработчик POST-запроса
+	}
+
+	// Запуск сервера
+	if err := router.Run(":8080"); err != nil {
+		logger.Error("server failed to start", "err", err.Error())
+	}
 }
