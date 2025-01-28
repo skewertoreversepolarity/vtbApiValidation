@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/skewertoreversepolarity/vtbApiValidation/tree/main/handlers"
+	"github.com/skewertoreversepolarity/vtbApiValidation/tree/main/internal"
 	"log/slog"
 	"os"
-	"vtbapivalidation/handlers"
-	"vtbapivalidation/internal"
 )
 
 func main() {
@@ -25,6 +25,7 @@ func main() {
 	vtbPaymentHandlers := router.Group("/vtb.rbsuat.com/payment")
 	{
 		vtbPaymentHandlers.POST("/rest/register.do", h.RegistrOrderHandler) // Обработчик POST-запроса
+		vtbPaymentHandlers.POST("/rest/getOrderStatusExtended.do", h.GetOrderStatusExtendedHandler)
 	}
 
 	// Запуск сервера

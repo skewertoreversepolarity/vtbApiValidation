@@ -3,16 +3,26 @@ package handlers
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
-func (h *Handlers) RegistrOrder(c *gin.Context) (string, error) {
-	url := "https://vtb.rbsuat.com/payment/rest/register.do"
+// RegisterOrder регистрация заказа и получения ссылки для редиректа пользователя на форму оплаты
+func (h *Handlers) RegisterOrder(c *gin.Context) ([]byte, error) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	url := os.Getenv("URL") + os.Getenv("ORDER_REGISTRATION_URL")
+
 	method := "POST"
 
-	// Получаем параметры из запроса (например, параметры формы)
+	// Получаем параметры из запроса
 	amount := c.PostForm("amount")
 	currency := c.PostForm("currency")
 	language := c.PostForm("language")
@@ -34,7 +44,7 @@ func (h *Handlers) RegistrOrder(c *gin.Context) (string, error) {
 	// Создаем HTTP-запрос
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return "", fmt.Errorf("error creating request: %w", err)
+		return []byte(""), fmt.Errorf("error creating request: %w", err)
 	}
 
 	// Устанавливаем заголовки
@@ -46,18 +56,18 @@ func (h *Handlers) RegistrOrder(c *gin.Context) (string, error) {
 	// Отправляем запрос
 	res, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("error sending request: %w", err)
+		return []byte(""), fmt.Errorf("error sending request: %w", err)
 	}
 	defer res.Body.Close()
 
 	// Читаем ответ
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", fmt.Errorf("Error reading response: %w", err)
+		return []byte(""), fmt.Errorf("Error reading response: %w", err)
 	}
 
 	// Возвращаем тело ответа как строку
-	return string(body), nil
+	return body, nil
 }
 
 //func (h *Handlers) RegistrOrder(c *gin.Context) (string, error) {

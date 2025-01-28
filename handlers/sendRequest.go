@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/skewertoreversepolarity/vtbApiValidation/tree/main/internal/models"
 	"io"
 	"net/http"
-	"vtbapivalidation/internal/models"
 )
 
 func SendRequest(r models.Requset) ([]byte, error) {
