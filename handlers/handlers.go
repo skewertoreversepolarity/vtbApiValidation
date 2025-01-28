@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 type RegisterOrderResponse struct {
@@ -60,6 +61,7 @@ func (h *Handlers) GetOrderStatusExtendedHandler(c *gin.Context) {
 	// Вызываем функцию GetOrderStatusExtended, которая отправляет запрос к VTB API
 	response, err := h.GetOrderStatusExtended(c)
 	if err != nil {
+		h.Logger.Error("ошибка при получении статуса ордера", err, err.Error())
 		// Если произошла ошибка при запросе, возвращаем ошибку в ответ
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -70,13 +72,20 @@ func (h *Handlers) GetOrderStatusExtendedHandler(c *gin.Context) {
 	r := bytes.NewReader(response)
 
 	var responseBody models.GetOrderStatusExtended
-
-	if err := json.NewDecoder(r).Decode(&responseBody); err != nil {
+	if err := json.Unmarshal(response, &responseBody); err != nil {
+		h.Logger.Error("Ошибка при парсинге ответа", "err", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
-		return
 	}
+	responseBody.Date = time.UnixMilli(responseBody.Date.UnixMilli())
+	responseBody.AuthDateTime = time.UnixMilli(responseBody.AuthDateTime.UnixMilli())
+	//if err := json.NewDecoder(r).Decode(&responseBody); err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 	fmt.Println(responseBody)
 
 	// Возвращаем успешный ответ с результатом запроса
