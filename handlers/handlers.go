@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/skewertoreversepolarity/vtbApiValidation/tree/main/internal/models"
 	"gorm.io/gorm"
 	"log/slog"
 	"net/http"
@@ -28,7 +29,7 @@ func NewHandlers(db *gorm.DB, logger *slog.Logger) *Handlers {
 
 func (h *Handlers) RegistrOrderHandler(c *gin.Context) {
 	// Вызываем функцию RegistrOrder, которая отправляет запрос к VTB API
-	response, err := h.RegistrOrder(c)
+	response, err := h.RegisterOrder(c)
 	if err != nil {
 		// Если произошла ошибка при запросе, возвращаем ошибку в ответ
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -68,7 +69,7 @@ func (h *Handlers) GetOrderStatusExtendedHandler(c *gin.Context) {
 
 	r := bytes.NewReader(response)
 
-	var responseBody RegisterOrderResponse
+	var responseBody models.GetOrderStatusExtended
 
 	if err := json.NewDecoder(r).Decode(&responseBody); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -81,7 +82,5 @@ func (h *Handlers) GetOrderStatusExtendedHandler(c *gin.Context) {
 	// Возвращаем успешный ответ с результатом запроса
 	c.JSON(http.StatusOK, gin.H{
 		"response": responseBody,
-		"orderId":  responseBody.OrderID,
-		"formUrl":  responseBody.FormUrl,
 	})
 }

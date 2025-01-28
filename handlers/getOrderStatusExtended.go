@@ -23,11 +23,11 @@ func (h *Handlers) GetOrderStatusExtended(c *gin.Context) ([]byte, error) {
 	userName := c.PostForm("userName")
 	password := c.PostForm("password")
 	language := c.PostForm("language")
-	orderNumber := c.PostForm("orderNumber")
+	orderId := c.PostForm("orderId")
 
 	payload := strings.NewReader(fmt.Sprintf(
 		"userName=%s&password=%s&language=%s&orderId=%s",
-		userName, password, language, orderNumber,
+		userName, password, language, orderId,
 	))
 
 	//формируем тоело запроса с получением параметров
@@ -38,7 +38,9 @@ func (h *Handlers) GetOrderStatusExtended(c *gin.Context) ([]byte, error) {
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.SetBasicAuth(userName, password)
+	req.Header.Add("Cookie", "cookiesession1=678A3E32BA54B86782B0149ABFF8EBD2")
+
+	//req.SetBasicAuth(userName, password)
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -49,7 +51,5 @@ func (h *Handlers) GetOrderStatusExtended(c *gin.Context) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка при чтении ответа%s", err)
 	}
-
 	return body, nil
-
 }
