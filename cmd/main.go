@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/skewertoreversepolarity/vtbApiValidation/tree/main/handlers"
 	"github.com/skewertoreversepolarity/vtbApiValidation/tree/main/internal"
+	"github.com/skewertoreversepolarity/vtbApiValidation/tree/main/internal/models"
 	"log/slog"
 	"os"
 )
@@ -17,6 +18,11 @@ func main() {
 		return
 	}
 
+	if err := db.AutoMigrate(&models.GetOrderStatusExtended{}); err != nil {
+		logger.Error("cannot auto migrate order", "err", err.Error())
+		return
+	}
+
 	h := handlers.NewHandlers(db, logger)
 
 	router := gin.New()
@@ -24,7 +30,7 @@ func main() {
 	// Группа маршрутов для API VTB
 	vtbPaymentHandlers := router.Group("/vtb.rbsuat.com/payment")
 	{
-		vtbPaymentHandlers.POST("/rest/register.do", h.RegistrOrderHandler) // Обработчик POST-запроса
+		vtbPaymentHandlers.POST("/rest/register.do", h.RegisterOrderHandler) // Обработчик POST-запроса
 		vtbPaymentHandlers.POST("/rest/getOrderStatusExtended.do", h.GetOrderStatusExtendedHandler)
 	}
 
