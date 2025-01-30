@@ -2,72 +2,98 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
 
 // RegisterOrder регистрация заказа и получения ссылки для редиректа пользователя на форму оплаты
-func (h *Handlers) RegisterOrder(c *gin.Context) ([]byte, error) {
+
+func (h *Handlers) RegisterOrder(requestData map[string]interface{}) ([]byte, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	url := os.Getenv("URL") + os.Getenv("ORDER_REGISTRATION_URL")
+	apiUrl := os.Getenv("URL") + os.Getenv("ORDER_REGISTRATION_URL")
 
 	method := "POST"
 
-	// Получаем параметры из запроса
-	amount := c.PostForm("amount")
-	currency := c.PostForm("currency")
-	language := c.PostForm("language")
-	orderNumber := c.PostForm("orderNumber")
-	returnUrl := c.PostForm("returnUrl")
-	userName := c.PostForm("userName")
-	password := c.PostForm("password")
-	clientId := c.PostForm("clientId")
-
-	// Формируем тело запроса с полученными параметрами
-	payload := strings.NewReader(fmt.Sprintf(
-		"amount=%s&currency=%s&language=%s&orderNumber=%s&returnUrl=%s&userName=%s&password=%s&clientId=%s",
-		amount, currency, language, orderNumber, returnUrl, userName, password, clientId,
-	))
-
-	// Создаем HTTP-клиент
-	client := &http.Client{}
-
-	// Создаем HTTP-запрос
-	req, err := http.NewRequest(method, url, payload)
-	if err != nil {
-		return []byte(""), fmt.Errorf("error creating request: %w", err)
+	data := url.Values{}
+	for k, v := range requestData {
+		data.Set(k, fmt.Sprintf("%v", v))
 	}
 
-	// Устанавливаем заголовки
+	client := &http.Client{}
+	req, err := http.NewRequest(method, apiUrl, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	// Добавляем авторизацию (Basic Auth)
-	req.SetBasicAuth(userName, password)
-
-	// Отправляем запрос
 	res, err := client.Do(req)
 	if err != nil {
-		return []byte(""), fmt.Errorf("error sending request: %w", err)
+		return nil, err
 	}
 	defer res.Body.Close()
 
-	// Читаем ответ
-	body, err := io.ReadAll(res.Body)
+	//read response
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		return []byte(""), fmt.Errorf("Error reading response: %w", err)
+		return nil, err
 	}
 
-	// Возвращаем тело ответа как строку
 	return body, nil
+	//// Получаем параметры из запроса
+	//amount := c.PostForm("amount")
+	//currency := c.PostForm("currency")
+	//language := c.PostForm("language")
+	//orderNumber := c.PostForm("orderNumber")
+	//returnUrl := c.PostForm("returnUrl")
+	//userName := c.PostForm("userName")
+	//password := c.PostForm("password")
+	//clientId := c.PostForm("clientId")
+	//
+	//// Формируем тело запроса с полученными параметрами
+	//payload := strings.NewReader(fmt.Sprintf(
+	//	"amount=%s&currency=%s&language=%s&orderNumber=%s&returnUrl=%s&userName=%s&password=%s&clientId=%s",
+	//	amount, currency, language, orderNumber, returnUrl, userName, password, clientId,
+	//))
+	//
+	//// Создаем HTTP-клиент
+	//client := &http.Client{}
+	//
+	//// Создаем HTTP-запрос
+	//req, err := http.NewRequest(method, apiUrl, payload)
+	//if err != nil {
+	//	return []byte(""), fmt.Errorf("error creating request: %w", err)
+	//}
+	//
+	//// Устанавливаем заголовки
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//
+	//// Добавляем авторизацию (Basic Auth)
+	//req.SetBasicAuth(userName, password)
+	//
+	//// Отправляем запрос
+	//res, err := client.Do(req)
+	//if err != nil {
+	//	return []byte(""), fmt.Errorf("error sending request: %w", err)
+	//}
+	//defer res.Body.Close()
+	//
+	//// Читаем ответ
+	//body, err := io.ReadAll(res.Body)
+	//if err != nil {
+	//	return []byte(""), fmt.Errorf("Error reading response: %w", err)
+	//}
+	//
+	//// Возвращаем тело ответа как строку
+	//return body, nil
 }
 
 //func (h *Handlers) RegistrOrder(c *gin.Context) (string, error) {
